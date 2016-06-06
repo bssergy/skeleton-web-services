@@ -8,8 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-
 @RestController
 public class GreetingController {
 
@@ -20,10 +18,10 @@ public class GreetingController {
             value = "/api/greetings",
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Collection<Greeting>> getGreetings() {
-        Collection<Greeting> greetings = greetingService.findAll();
+    public ResponseEntity<Iterable<Greeting>> getGreetings() {
+        Iterable<Greeting> greetings = greetingService.findAll();
 
-        return new ResponseEntity<Collection<Greeting>>(greetings,
+        return new ResponseEntity<Iterable<Greeting>>(greetings,
                 HttpStatus.OK);
     }
 

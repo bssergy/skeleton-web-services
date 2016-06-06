@@ -2,11 +2,9 @@ package org.example.ws.service;
 
 import org.example.ws.model.Greeting;
 
-import java.util.Collection;
-
 public interface GreetingService {
 
-    Collection<Greeting> findAll();
+    Iterable<Greeting> findAll();
 
     Greeting findOne(Long id);
 
