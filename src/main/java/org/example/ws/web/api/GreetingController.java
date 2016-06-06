@@ -1,18 +1,28 @@
 package org.example.ws.web.api;
 
 import org.example.ws.model.Greeting;
+import org.example.ws.service.EmailService;
 import org.example.ws.service.GreetingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.Future;
+
 @RestController
 public class GreetingController {
 
     @Autowired
     private GreetingService greetingService;
+
+    @Autowired
+    private EmailService emailService;
+
+    private Logger logger  = LoggerFactory.getLogger(this.getClass());
 
     @RequestMapping(
             value = "/api/greetings",
@@ -75,6 +85,43 @@ public class GreetingController {
         greetingService.delete(id);
 
         return new ResponseEntity<Greeting>(HttpStatus.NO_CONTENT);
+    }
+
+    @RequestMapping(
+            value = "/api/greetings/{id}/send",
+            method = RequestMethod.POST,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Greeting> sendGreeting(@PathVariable("id") Long id,
+                                                 @RequestParam(
+                                                         value = "wait",
+                                                         defaultValue = "false") boolean waitForAsyncResult) {
+        logger.info("> sendGreeting");
+
+        Greeting greeting = null;
+
+        try {
+            greeting = greetingService.findOne(id);
+            if (greeting == null) {
+                logger.info("< sendGreeting");
+                return new ResponseEntity<Greeting>(HttpStatus.NOT_FOUND);
+            }
+
+            if (waitForAsyncResult) {
+                Future<Boolean> asyncResponse = emailService
+                        .sendAsyncWithResult(greeting);
+                boolean emailSent = asyncResponse.get();
+                logger.info("- greeting email sent? {}", emailSent);
+            } else {
+                emailService.sendAsync(greeting);
+            }
+        } catch (Exception e) {
+            logger.error("A problem occured sending the Greeting.", e);
+            return new ResponseEntity<Greeting>(
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        logger.info("< sendGreeting");
+        return new ResponseEntity<Greeting>(greeting, HttpStatus.OK);
     }
 
 }
