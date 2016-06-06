@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityExistsException;
+import javax.persistence.NoResultException;
+
 @Service
 @Transactional(
         propagation = Propagation.SUPPORTS,
@@ -44,7 +47,8 @@ public class GreetingServiceBean implements GreetingService {
     public Greeting create(Greeting greeting) {
         if (greeting.getId() != null) {
             // Cannot create Greeting with specified ID value
-            return null;
+            throw new EntityExistsException(
+                    "The id attribute must be null to persist a new entity.");
         }
 
         Greeting savedGreeting = greetingRepository.save(greeting);
@@ -68,7 +72,7 @@ public class GreetingServiceBean implements GreetingService {
         Greeting greetingPersisted = findOne(greeting.getId());
         if (greetingPersisted == null) {
             // Cannot update Greeting that hasn't been persisted
-            return null;
+            throw new NoResultException("Requested entity not found.");
         }
 
         Greeting updatedGreeting = greetingRepository.save(greeting);
